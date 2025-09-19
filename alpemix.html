@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPEMİX - Donas Kurye Yönetim Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .status-active { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-busy { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .status-offline { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .status-break { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .city-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .branch-card { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .emergency-alert { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-xl border-b-4 border-red-500">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-xl shadow-lg">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">ALPEMİX</h1>
+                        <p class="text-gray-600 font-medium">Donas Kurye Operasyon Yönetim Sistemi</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600">Operasyon Müdürü</div>
+                        <div class="text-lg font-bold text-gray-900">👨‍💼 Alperen ŞAHİN</div>
+                    </div>
+                    <div class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold">
+                        🟢 Sistem Aktif
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600">Toplam Aktif Kurye</div>
+                        <div class="text-2xl font-bold text-red-600" id="totalActiveCouriers">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Genel İstatistikler -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Toplam Şehir</p>
+                        <p class="text-2xl font-bold text-blue-600" id="totalCities">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Toplam Şube</p>
+                        <p class="text-2xl font-bold text-purple-600" id="totalBranches">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Aktif Siparişler</p>
+                        <p class="text-2xl font-bold text-green-600" id="totalActiveOrders">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-orange-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Teslimat Yapan</p>
+                        <p class="text-2xl font-bold text-orange-600" id="busyCouriers">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Günlük Teslimat</p>
+                        <p class="text-2xl font-bold text-red-600" id="dailyDeliveries">0</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Şehir ve Şube Listesi -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-bold text-gray-900">🏙️ Şehir ve Şube Durumu</h2>
+                            <div class="flex space-x-2">
+                                <select id="cityFilter" onchange="filterByCity()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                    <option value="">Tüm Şehirler</option>
+                                </select>
+                                <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+                                    🔄 Yenile
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="cityList" class="space-y-6">
+                            <!-- Şehirler buraya eklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Panel -->
+            <div class="space-y-6">
+                <!-- Acil Transfer Paneli -->
+                <div class="bg-white rounded-xl shadow-lg border-l-4 border-red-500">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-red-600">🚨 Acil Kurye Transferi</h3>
+                        <p class="text-sm text-gray-600 mt-1">Şehirler arası destek transferi</p>
+                    </div>
+                    <div class="p-6">
+                        <form onsubmit="emergencyTransfer(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kaynak Şube</label>
+                                <select id="sourceBranch" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">Şube seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kurye Seç</label>
+                                <select id="courierSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">Önce şube seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Hedef Şube</label>
+                                <select id="targetBranch" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">Hedef şube seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Transfer Nedeni</label>
+                                <select id="transferReason" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">Neden seçin...</option>
+                                    <option value="motor_breakdown">🔧 Motor Arızası</option>
+                                    <option value="accident">🚑 Kaza Durumu</option>
+                                    <option value="high_volume">📈 Aşırı Yoğunluk</option>
+                                    <option value="staff_shortage">👥 Personel Eksikliği</option>
+                                    <option value="emergency">🚨 Acil Durum</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-bold transition-colors emergency-alert">
+                                🚨 ACİL TRANSFER ET
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Anlık Durum -->
+                <div class="bg-white rounded-xl shadow-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900">📊 Anlık Durum</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">En Yoğun Şube</span>
+                            <span class="font-bold text-red-600" id="busiestBranch">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Ortalama Teslimat</span>
+                            <span class="font-medium text-blue-600">22 dk</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Müsait Kuryeler</span>
+                            <span class="font-medium text-green-600" id="availableCouriers">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Mola Verenler</span>
+                            <span class="font-medium text-gray-600" id="breakCouriers">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Çevrimdışı</span>
+                            <span class="font-medium text-red-600" id="offlineCouriers">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Son Transferler -->
+                <div class="bg-white rounded-xl shadow-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900">📋 Son Transferler</h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="recentTransfers" class="space-y-3">
+                            <!-- Son transferler buraya gelecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kurye Detay Modal -->
+    <div id="courierModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-900">👤 Kurye Detayları</h3>
+                    <button onclick="closeCourierModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="courierModalContent" class="p-6">
+                <!-- Kurye detayları buraya gelecek -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Veri yapıları
+        let cities = [];
+        let branches = [];
+        let couriers = [];
+        let recentTransfers = [];
+
+        // Örnek veri oluşturma
+        function initializeData() {
+            cities = [
+                { id: 1, name: 'Malatya', branchCount: 5 },
+                { id: 2, name: 'Kayseri', branchCount: 6 },
+                { id: 3, name: 'Sivas', branchCount: 1 },
+                { id: 4, name: 'Elazığ', branchCount: 3 },
+                { id: 5, name: 'Erzurum', branchCount: 2 }
+            ];
+
+            branches = [
+                // Malatya şubeleri
+                { id: 1, cityId: 1, name: 'Malatya Merkez', address: 'Battalgazi Mah. Atatürk Cad. No:15', orderCount: 18, priority: 'high' },
+                { id: 2, cityId: 1, name: 'Malatya Yeşilyurt', address: 'Yeşilyurt İlçesi Cumhuriyet Cad. No:42', orderCount: 12, priority: 'medium' },
+                { id: 3, cityId: 1, name: 'Malatya Akçadağ', address: 'Akçadağ İlçesi Merkez Mah. No:8', orderCount: 8, priority: 'low' },
+                { id: 4, cityId: 1, name: 'Malatya Darende', address: 'Darende İlçesi Atatürk Cad. No:23', orderCount: 15, priority: 'high' },
+                { id: 5, cityId: 1, name: 'Malatya Doğanşehir', address: 'Doğanşehir İlçesi Merkez No:12', orderCount: 9, priority: 'medium' },
+                
+                // Kayseri şubeleri
+                { id: 6, cityId: 2, name: 'Kayseri Merkez', address: 'Melikgazi İlçesi Sivas Cad. No:67', orderCount: 22, priority: 'high' },
+                { id: 7, cityId: 2, name: 'Kayseri Kocasinan', address: 'Kocasinan İlçesi Erciyes Cad. No:34', orderCount: 16, priority: 'high' },
+                { id: 8, cityId: 2, name: 'Kayseri Talas', address: 'Talas İlçesi Merkez Mah. No:19', orderCount: 11, priority: 'medium' },
+                { id: 9, cityId: 2, name: 'Kayseri Develi', address: 'Develi İlçesi Atatürk Cad. No:45', orderCount: 7, priority: 'low' },
+                { id: 10, cityId: 2, name: 'Kayseri İncesu', address: 'İncesu İlçesi Cumhuriyet Mah. No:28', orderCount: 13, priority: 'medium' },
+                { id: 11, cityId: 2, name: 'Kayseri Yahyalı', address: 'Yahyalı İlçesi Merkez No:6', orderCount: 9, priority: 'medium' },
+                
+                // Sivas şubesi
+                { id: 12, cityId: 3, name: 'Sivas Merkez', address: 'Merkez İlçesi Atatürk Cad. No:89', orderCount: 14, priority: 'medium' },
+                
+                // Elazığ şubeleri
+                { id: 13, cityId: 4, name: 'Elazığ Merkez', address: 'Merkez İlçesi Cumhuriyet Cad. No:56', orderCount: 17, priority: 'high' },
+                { id: 14, cityId: 4, name: 'Elazığ Sivrice', address: 'Sivrice İlçesi Merkez Mah. No:14', orderCount: 6, priority: 'low' },
+                { id: 15, cityId: 4, name: 'Elazığ Karakoçan', address: 'Karakoçan İlçesi Atatürk Cad. No:31', orderCount: 10, priority: 'medium' },
+                
+                // Erzurum şubeleri
+                { id: 16, cityId: 5, name: 'Erzurum Merkez', address: 'Yakutiye İlçesi Atatürk Cad. No:78', orderCount: 19, priority: 'high' },
+                { id: 17, cityId: 5, name: 'Erzurum Palandöken', address: 'Palandöken İlçesi Cumhuriyet Mah. No:25', orderCount: 11, priority: 'medium' }
+            ];
+
+            // Her şube için 5-6 kurye oluştur
+            couriers = [];
+            let courierId = 1;
+            const courierNames = [
+                'Ahmet Yılmaz', 'Mehmet Kaya', 'Ali Demir', 'Fatma Şahin', 'Ayşe Öz', 'Mustafa Çelik',
+                'Zeynep Arslan', 'Emre Koç', 'Selin Yurt', 'Burak Aydın', 'Elif Kara', 'Oğuz Tan',
+                'Merve Güneş', 'Cem Özkan', 'Deniz Yıldız', 'Berk Aslan', 'Gamze Polat', 'Kerem Doğan',
+                'Nisa Çetin', 'Arda Şen', 'Pınar Koç', 'Tolga Eren', 'Esra Kılıç', 'Barış Öztürk'
+            ];
+
+            branches.forEach(branch => {
+                const courierCount = Math.floor(Math.random() * 2) + 5; // 5-6 kurye
+                for (let i = 0; i < courierCount; i++) {
+                    const statuses = ['active', 'busy', 'break', 'offline'];
+                    const weights = [0.4, 0.35, 0.15, 0.1]; // Ağırlıklı rastgele seçim
+                    let randomStatus = statuses[0];
+                    const rand = Math.random();
+                    let cumulative = 0;
+                    for (let j = 0; j < weights.length; j++) {
+                        cumulative += weights[j];
+                        if (rand < cumulative) {
+                            randomStatus = statuses[j];
+                            break;
+                        }
+                    }
+
+                    couriers.push({
+                        id: courierId++,
+                        name: courierNames[Math.floor(Math.random() * courierNames.length)],
+                        branchId: branch.id,
+                        status: randomStatus,
+                        phone: `0${Math.floor(Math.random() * 900) + 500} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 90) + 10} ${Math.floor(Math.random() * 90) + 10}`,
+                        rating: (Math.random() * 1.5 + 3.5).toFixed(1),
+                        deliveries: Math.floor(Math.random() * 200) + 50,
+                        todayDeliveries: Math.floor(Math.random() * 15) + 2
+                    });
+                }
+            });
+
+            updateStatistics();
+            renderCities();
+            updateSelects();
+            updateRecentTransfers();
+        }
+
+        // İstatistikleri güncelle
+        function updateStatistics() {
+            document.getElementById('totalCities').textContent = cities.length;
+            document.getElementById('totalBranches').textContent = branches.length;
+            document.getElementById('totalActiveCouriers').textContent = couriers.filter(c => c.status !== 'offline').length;
+            document.getElementById('totalActiveOrders').textContent = branches.reduce((sum, b) => sum + b.orderCount, 0);
+            document.getElementById('busyCouriers').textContent = couriers.filter(c => c.status === 'busy').length;
+            document.getElementById('availableCouriers').textContent = couriers.filter(c => c.status === 'active').length;
+            document.getElementById('breakCouriers').textContent = couriers.filter(c => c.status === 'break').length;
+            document.getElementById('offlineCouriers').textContent = couriers.filter(c => c.status === 'offline').length;
+            document.getElementById('dailyDeliveries').textContent = couriers.reduce((sum, c) => sum + c.todayDeliveries, 0);
+
+            // En yoğun şube
+            const busiest = branches.reduce((max, b) => b.orderCount > max.orderCount ? b : max, branches[0]);
+            document.getElementById('busiestBranch').textContent = busiest ? busiest.name : '-';
+
+            // Şehir filtresi güncelle
+            const cityFilter = document.getElementById('cityFilter');
+            cityFilter.innerHTML = '<option value="">Tüm Şehirler</option>';
+            cities.forEach(city => {
+                cityFilter.innerHTML += `<option value="${city.id}">${city.name}</option>`;
+            });
+        }
+
+        // Şehirleri render et
+        function renderCities() {
+            const container = document.getElementById('cityList');
+            container.innerHTML = '';
+
+            const selectedCityId = document.getElementById('cityFilter').value;
+            const filteredCities = selectedCityId ? cities.filter(c => c.id == selectedCityId) : cities;
+
+            filteredCities.forEach(city => {
+                const cityBranches = branches.filter(b => b.cityId === city.id);
+                const cityDiv = document.createElement('div');
+                cityDiv.className = 'space-y-4';
+                
+                cityDiv.innerHTML = `
+                    <div class="city-card text-white p-4 rounded-lg shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-2 rounded-lg">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold">${city.name}</h3>
+                                    <p class="text-white text-opacity-80">${cityBranches.length} şube • ${couriers.filter(c => cityBranches.some(b => b.id === c.branchId)).length} kurye</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold">${cityBranches.reduce((sum, b) => sum + b.orderCount, 0)}</div>
+                                <div class="text-white text-opacity-80 text-sm">aktif sipariş</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${cityBranches.map(branch => {
+                            const branchCouriers = couriers.filter(c => c.branchId === branch.id);
+                            const priorityColor = {
+                                'high': 'border-red-500 bg-red-50',
+                                'medium': 'border-yellow-500 bg-yellow-50',
+                                'low': 'border-green-500 bg-green-50'
+                            };
+                            
+                            return `
+                                <div class="bg-white rounded-lg shadow-md border-l-4 ${priorityColor[branch.priority]} p-4 card-hover cursor-pointer" onclick="showBranchDetails(${branch.id})">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div>
+                                            <h4 class="font-bold text-gray-900">${branch.name}</h4>
+                                            <p class="text-sm text-gray-600">${branch.address}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-bold text-red-600">${branch.orderCount}</div>
+                                            <div class="text-xs text-gray-500">sipariş</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex space-x-1">
+                                            ${branchCouriers.map(courier => `
+                                                <div class="w-3 h-3 rounded-full ${
+                                                    courier.status === 'active' ? 'bg-green-500' :
+                                                    courier.status === 'busy' ? 'bg-orange-500' :
+                                                    courier.status === 'break' ? 'bg-gray-500' : 'bg-red-500'
+                                                }" title="${courier.name} - ${courier.status}"></div>
+                                            `).join('')}
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            ${branchCouriers.filter(c => c.status === 'active').length} müsait • 
+                                            ${branchCouriers.filter(c => c.status === 'busy').length} teslimat
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(cityDiv);
+            });
+        }
+
+        // Select elementlerini güncelle
+        function updateSelects() {
+            const sourceBranch = document.getElementById('sourceBranch');
+            const targetBranch = document.getElementById('targetBranch');
+
+            sourceBranch.innerHTML = '<option value="">Şube seçin...</option>';
+            targetBranch.innerHTML = '<option value="">Hedef şube seçin...</option>';
+
+            branches.forEach(branch => {
+                const city = cities.find(c => c.id === branch.cityId);
+                const option = `<option value="${branch.id}">${city.name} - ${branch.name}</option>`;
+                sourceBranch.innerHTML += option;
+                targetBranch.innerHTML += option;
+            });
+        }
+
+        // Kaynak şube değiştiğinde kuryeleri güncelle
+        document.getElementById('sourceBranch').addEventListener('change', function() {
+            const branchId = parseInt(this.value);
+            const courierSelect = document.getElementById('courierSelect');
+            
+            courierSelect.innerHTML = '<option value="">Kurye seçin...</option>';
+            
+            if (branchId) {
+                const branchCouriers = couriers.filter(c => c.branchId === branchId && c.status === 'active');
+                branchCouriers.forEach(courier => {
+                    courierSelect.innerHTML += `<option value="${courier.id}">${courier.name} (${courier.status})</option>`;
+                });
+            }
+        });
+
+        // Şube detaylarını göster
+        function showBranchDetails(branchId) {
+            const branch = branches.find(b => b.id === branchId);
+            const city = cities.find(c => c.id === branch.cityId);
+            const branchCouriers = couriers.filter(c => c.branchId === branchId);
+            
+            const modal = document.getElementById('courierModal');
+            const content = document.getElementById('courierModalContent');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <h4 class="text-xl font-bold text-gray-900">${branch.name}</h4>
+                        <p class="text-gray-600">${city.name} • ${branch.address}</p>
+                        <div class="mt-2">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                ${branch.orderCount} Aktif Sipariş
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-green-50 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-green-600">${branchCouriers.filter(c => c.status === 'active').length}</div>
+                            <div class="text-sm text-green-600">Müsait</div>
+                        </div>
+                        <div class="bg-orange-50 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-orange-600">${branchCouriers.filter(c => c.status === 'busy').length}</div>
+                            <div class="text-sm text-orange-600">Teslimat</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-gray-600">${branchCouriers.filter(c => c.status === 'break').length}</div>
+                            <div class="text-sm text-gray-600">Mola</div>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-red-600">${branchCouriers.filter(c => c.status === 'offline').length}</div>
+                            <div class="text-sm text-red-600">Çevrimdışı</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h5 class="font-semibold text-gray-900 mb-3">Kurye Listesi</h5>
+                        <div class="space-y-2 max-h-60 overflow-y-auto">
+                            ${branchCouriers.map(courier => `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-4 h-4 rounded-full ${
+                                            courier.status === 'active' ? 'bg-green-500' :
+                                            courier.status === 'busy' ? 'bg-orange-500' :
+                                            courier.status === 'break' ? 'bg-gray-500' : 'bg-red-500'
+                                        }"></div>
+                                        <div>
+                                            <div class="font-medium text-gray-900">${courier.name}</div>
+                                            <div class="text-sm text-gray-600">${courier.phone}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm font-medium">⭐ ${courier.rating}</div>
+                                        <div class="text-xs text-gray-500">${courier.todayDeliveries} teslimat</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Modal kapat
+        function closeCourierModal() {
+            document.getElementById('courierModal').classList.add('hidden');
+            document.getElementById('courierModal').classList.remove('flex');
+        }
+
+        // Acil transfer
+        function emergencyTransfer(event) {
+            event.preventDefault();
+            
+            const sourceBranchId = parseInt(document.getElementById('sourceBranch').value);
+            const courierId = parseInt(document.getElementById('courierSelect').value);
+            const targetBranchId = parseInt(document.getElementById('targetBranch').value);
+            const reason = document.getElementById('transferReason').value;
+            
+            if (!sourceBranchId || !courierId || !targetBranchId || !reason) {
+                showNotification('Lütfen tüm alanları doldurun!', 'error');
+                return;
+            }
+            
+            if (sourceBranchId === targetBranchId) {
+                showNotification('Kaynak ve hedef şube aynı olamaz!', 'error');
+                return;
+            }
+            
+            const courier = couriers.find(c => c.id === courierId);
+            const sourceBranch = branches.find(b => b.id === sourceBranchId);
+            const targetBranch = branches.find(b => b.id === targetBranchId);
+            const sourceCity = cities.find(c => c.id === sourceBranch.cityId);
+            const targetCity = cities.find(c => c.id === targetBranch.cityId);
+            
+            // Transfer işlemi
+            courier.branchId = targetBranchId;
+            
+            // Transfer kaydı ekle
+            const reasonTexts = {
+                'motor_breakdown': '🔧 Motor Arızası',
+                'accident': '🚑 Kaza Durumu',
+                'high_volume': '📈 Aşırı Yoğunluk',
+                'staff_shortage': '👥 Personel Eksikliği',
+                'emergency': '🚨 Acil Durum'
+            };
+            
+            recentTransfers.unshift({
+                id: Date.now(),
+                courierName: courier.name,
+                from: `${sourceCity.name} - ${sourceBranch.name}`,
+                to: `${targetCity.name} - ${targetBranch.name}`,
+                reason: reasonTexts[reason],
+                time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+            });
+            
+            // En fazla 5 transfer göster
+            if (recentTransfers.length > 5) {
+                recentTransfers = recentTransfers.slice(0, 5);
+            }
+            
+            updateStatistics();
+            renderCities();
+            updateSelects();
+            updateRecentTransfers();
+            
+            // Form temizle
+            document.getElementById('sourceBranch').value = '';
+            document.getElementById('courierSelect').value = '';
+            document.getElementById('targetBranch').value = '';
+            document.getElementById('transferReason').value = '';
+            
+            showNotification(`🚨 ACİL TRANSFER: ${courier.name}, ${sourceCity.name}'dan ${targetCity.name}'ya transfer edildi!`, 'success');
+        }
+
+        // Son transferleri güncelle
+        function updateRecentTransfers() {
+            const container = document.getElementById('recentTransfers');
+            
+            if (recentTransfers.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center">Henüz transfer yapılmadı</p>';
+                return;
+            }
+            
+            container.innerHTML = recentTransfers.map(transfer => `
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm font-medium text-gray-900">${transfer.courierName}</div>
+                        <div class="text-xs text-gray-500">${transfer.time}</div>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        ${transfer.from} → ${transfer.to}
+                    </div>
+                    <div class="text-xs text-red-600 mt-1">${transfer.reason}</div>
+                </div>
+            `).join('');
+        }
+
+        // Şehir filtresi
+        function filterByCity() {
+            renderCities();
+        }
+
+        // Veri yenile
+        function refreshData() {
+            // Sipariş sayılarını rastgele güncelle
+            branches.forEach(branch => {
+                branch.orderCount = Math.max(0, branch.orderCount + Math.floor(Math.random() * 6) - 2);
+                branch.priority = branch.orderCount > 15 ? 'high' : branch.orderCount > 8 ? 'medium' : 'low';
+            });
+            
+            // Kurye durumlarını rastgele güncelle
+            couriers.forEach(courier => {
+                if (Math.random() < 0.1) { // %10 şans ile durum değişir
+                    const statuses = ['active', 'busy', 'break', 'offline'];
+                    courier.status = statuses[Math.floor(Math.random() * statuses.length)];
+                }
+            });
+            
+            updateStatistics();
+            renderCities();
+            showNotification('Veriler güncellendi!', 'info');
+        }
+
+        // Bildirim göster
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full max-w-sm`;
+            
+            const colors = {
+                'success': 'bg-green-600',
+                'error': 'bg-red-600',
+                'info': 'bg-blue-600'
+            };
+            
+            notification.classList.add(colors[type]);
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 4000);
+        }
+
+        // Sayfa yüklendiğinde başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            
+            // Otomatik güncelleme (her 45 saniyede)
+            setInterval(() => {
+                refreshData();
+            }, 45000);
+        });
+
+        // Modal dışına tıklandığında kapat
+        document.getElementById('courierModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCourierModal();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'981af4bb204a2362',t:'MTc1ODMwNDU0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
